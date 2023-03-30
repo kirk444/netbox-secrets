@@ -12,7 +12,6 @@ from utilities.forms import (
     DynamicModelChoiceField,
     DynamicModelMultipleChoiceField,
     SlugField,
-    SmallTextarea,
     TagFilterField,
 )
 
@@ -133,7 +132,7 @@ class SecretFilterForm(NetBoxModelFilterSetForm):
 
 class UserKeyForm(forms.ModelForm):
     public_key = forms.CharField(
-        widget=SmallTextarea(
+        widget=forms.Textarea(
             attrs={
                 'class': 'form-control',
             },

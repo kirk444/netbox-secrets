@@ -277,11 +277,7 @@ class Secret(NetBoxModel):
     a minimum of 64 bytes during encryption in order to protect short strings from ciphertext analysis.
     """
 
-    assigned_object_type = models.ForeignKey(
-        to=ContentType,
-        on_delete=models.PROTECT,
-        related_name='secrets',
-    )
+    assigned_object_type = models.ForeignKey(to=ContentType, on_delete=models.PROTECT)
     assigned_object_id = models.PositiveIntegerField()
     assigned_object = GenericForeignKey(ct_field='assigned_object_type', fk_field='assigned_object_id')
     role = models.ForeignKey(to='SecretRole', on_delete=models.PROTECT, related_name='secrets')

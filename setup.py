@@ -2,12 +2,12 @@ from setuptools import find_packages, setup
 
 setup(
     name='netbox-secrets',
-    version='1.7.5',
+    version='1.8.0',
     description='Netbox Secrets',
     long_description='A Secret store for NetBox',
     url='https://github.com/Onemind-Services-LLC/netbox-secrets/',
-    author='Daniel Sheppard',
-    author_email='dans@dansheps.com',
+    author='Abhimanyu Saharan',
+    author_email='asaharan@onemindservices.com',
     license='Apache 2.0',
     install_requires=[
         'pycryptodome',
