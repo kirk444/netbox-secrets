@@ -9,14 +9,15 @@ from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.views.generic.base import View
+
 from extras.signals import clear_webhooks
 from netbox.views import generic
 from utilities.exceptions import AbortRequest, PermissionsViolation
 from utilities.forms import restrict_form_fields
 from utilities.utils import count_related, prepare_cloned_fields
 from utilities.views import GetReturnURLMixin, ViewTab, register_model_view
-
 from . import exceptions, filtersets, forms, models, tables, utils
+
 
 #
 # Mixins
@@ -352,3 +353,37 @@ class SessionKeyDeleteView(generic.ObjectDeleteView):
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(userkey__user=request.user)
+
+
+#
+# Certificates
+#
+
+class CertificateListView(generic.ObjectListView):
+    queryset = models.Certificate.objects.prefetch_related('role', 'tags')
+    filterset = filtersets.CertificateFilterSet
+    filterset_form = forms.CertificateFilterForm
+    table = tables.CertificateTable
+    action_buttons = ('bulk_delete', 'bulk_edit')
+
+
+@register_model_view(models.Certificate)
+class CertificateView(generic.ObjectView):
+    queryset = models.Certificate.objects.prefetch_related('role', 'tags')
+
+
+@register_model_view(models.Certificate, 'edit')
+class CertificateEditView(SecretEditView):
+    queryset = models.Certificate.objects.prefetch_related('role', 'tags')
+    model_form = forms.CertificateForm
+
+
+@register_model_view(models.Certificate, 'delete')
+class CertificateDeleteView(generic.ObjectDeleteView):
+    queryset = models.Certificate.objects.prefetch_related('role', 'tags')
+
+
+class CertificateBulkDeleteView(generic.BulkDeleteView):
+    queryset = models.Certificate.objects.prefetch_related('role', 'tags')
+    filterset = filtersets.CertificateFilterSet
+    table = tables.CertificateTable

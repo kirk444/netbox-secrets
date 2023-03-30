@@ -1,7 +1,8 @@
 import django_tables2 as tables
-from netbox.tables import NetBoxTable, columns
 
-from .models import Secret, SecretRole
+from netbox.tables import NetBoxTable, columns
+from .models import Certificate, Secret, SecretRole
+
 
 #
 # Secret roles
@@ -36,6 +37,33 @@ class SecretTable(NetBoxTable):
 
     class Meta(NetBoxTable.Meta):
         model = Secret
+        fields = (
+            'pk',
+            'id',
+            'name',
+            'assigned_object_type',
+            'assigned_object',
+            'role',
+            'created',
+            'last_updated',
+            'tags',
+        )
+        default_columns = ('pk', 'id', 'name', 'assigned_object_type', 'assigned_object', 'role', 'actions')
+
+
+#
+# Certificates
+#
+
+class CertificateTable(NetBoxTable):
+    name = tables.Column(linkify=True)
+    assigned_object_type = columns.ContentTypeColumn(verbose_name='Object type')
+    assigned_object = tables.Column(linkify=True, orderable=False, verbose_name='Object')
+    role = tables.Column(linkify=True)
+    tags = columns.TagColumn(url_name='plugins:netbox_secrets:certificate_list')
+
+    class Meta(NetBoxTable.Meta):
+        model = Certificate
         fields = (
             'pk',
             'id',

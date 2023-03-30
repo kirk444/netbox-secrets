@@ -1,6 +1,6 @@
 from django import forms
-from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext as _
+
 from netbox.forms import (
     NetBoxModelBulkEditForm,
     NetBoxModelFilterSetForm,
@@ -8,15 +8,14 @@ from netbox.forms import (
     NetBoxModelImportForm,
 )
 from utilities.forms import (
-    ContentTypeMultipleChoiceField,
-    DynamicModelChoiceField,
     DynamicModelMultipleChoiceField,
     SlugField,
-    TagFilterField,
+    TagFilterField
 )
-
+from .base import *
 from ..constants import *
 from ..models import Secret, SecretRole, UserKey
+
 
 #
 # Secret roles
@@ -60,7 +59,7 @@ class SecretRoleFilterForm(NetBoxModelFilterSetForm):
 #
 
 
-class SecretForm(NetBoxModelForm):
+class SecretForm(BaseSecretForm):
     plaintext = forms.CharField(
         max_length=SECRET_PLAINTEXT_MAX_LENGTH,
         required=False,
@@ -82,7 +81,6 @@ class SecretForm(NetBoxModelForm):
             },
         ),
     )
-    role = DynamicModelChoiceField(queryset=SecretRole.objects.all())
 
     class Meta:
         model = Secret
@@ -94,33 +92,10 @@ class SecretForm(NetBoxModelForm):
             'tags',
         )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        # A plaintext value is required when creating a new Secret
-        if not self.instance.pk:
-            self.fields['plaintext'].required = True
-
-    def clean(self):
-        super().clean()
-
-        # Verify that the provided plaintext values match
-        if self.cleaned_data['plaintext'] != self.cleaned_data['plaintext2']:
-            raise forms.ValidationError(
-                {'plaintext2': "The two given plaintext values do not match. Please check your input."},
-            )
-
-
-class SecretFilterForm(NetBoxModelFilterSetForm):
+class SecretFilterForm(BaseSecretFilterForm):
     model = Secret
-    q = forms.CharField(required=False, label=_('Search'))
     name = DynamicModelMultipleChoiceField(queryset=Secret.objects.all(), required=False)
-    assigned_object_type_id = ContentTypeMultipleChoiceField(
-        queryset=ContentType.objects.filter(SECRET_ASSIGNABLE_MODELS),
-        required=False,
-        label='Object type(s)',
-    )
-    role_id = DynamicModelMultipleChoiceField(queryset=SecretRole.objects.all(), required=False, label=_('Role'))
 
     tag = TagFilterField(model)
 

@@ -1,14 +1,15 @@
 from django.contrib.contenttypes.models import ContentType
 from drf_yasg.utils import swagger_serializer_method
+from rest_framework import serializers
+
 from netbox.api.fields import ContentTypeField
 from netbox.api.serializers import NetBoxModelSerializer
 from netbox.constants import NESTED_SERIALIZER_PREFIX
-from rest_framework import serializers
 from utilities.api import get_serializer_for_model
-
-from ..constants import SECRET_ASSIGNABLE_MODELS
-from ..models import Secret, SecretRole, UserKey
 from .nested_serializers import *
+from ..constants import SECRET_ASSIGNABLE_MODELS
+from ..models import Certificate, Secret, SecretRole, UserKey
+
 
 #
 # User Key
@@ -71,12 +72,33 @@ class SecretRoleSerializer(NetBoxModelSerializer):
 #
 
 
-class SecretSerializer(NetBoxModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='plugins-api:netbox_secrets-api:secret-detail')
+class BaseSecretSerializer(NetBoxModelSerializer):
     assigned_object_type = ContentTypeField(queryset=ContentType.objects.filter(SECRET_ASSIGNABLE_MODELS))
     assigned_object = serializers.SerializerMethodField(read_only=True)
     role = NestedSecretRoleSerializer()
     plaintext = serializers.CharField()
+
+    @swagger_serializer_method(serializer_or_field=serializers.DictField)
+    def get_assigned_object(self, obj):
+        serializer = get_serializer_for_model(obj.assigned_object, prefix=NESTED_SERIALIZER_PREFIX)
+        context = {'request': self.context['request']}
+        return serializer(obj.assigned_object, context=context).data
+
+    def validate(self, data):
+        # Encrypt plaintext data using the master key provided from the view context
+        if data.get('plaintext'):
+            s = Secret(plaintext=data['plaintext'])
+            s.encrypt(self.context['master_key'])
+            data['ciphertext'] = s.ciphertext
+            data['hash'] = s.hash
+
+        super().validate(data)
+
+        return data
+
+
+class SecretSerializer(BaseSecretSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='plugins-api:netbox_secrets-api:secret-detail')
 
     class Meta:
         model = Secret
@@ -98,20 +120,30 @@ class SecretSerializer(NetBoxModelSerializer):
         ]
         validators = []
 
-    @swagger_serializer_method(serializer_or_field=serializers.DictField)
-    def get_assigned_object(self, obj):
-        serializer = get_serializer_for_model(obj.assigned_object, prefix=NESTED_SERIALIZER_PREFIX)
-        context = {'request': self.context['request']}
-        return serializer(obj.assigned_object, context=context).data
 
-    def validate(self, data):
-        # Encrypt plaintext data using the master key provided from the view context
-        if data.get('plaintext'):
-            s = Secret(plaintext=data['plaintext'])
-            s.encrypt(self.context['master_key'])
-            data['ciphertext'] = s.ciphertext
-            data['hash'] = s.hash
+#
+# Certificates
+#
 
-        super().validate(data)
+class CertificateSerializer(BaseSecretSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='plugins-api:netbox_secrets-api:certificate-detail')
 
-        return data
+    class Meta:
+        model = Certificate
+        fields = [
+            'id',
+            'url',
+            'display',
+            'assigned_object_type',
+            'assigned_object_id',
+            'assigned_object',
+            'role',
+            'name',
+            'plaintext',
+            'hash',
+            'tags',
+            'custom_fields',
+            'created',
+            'last_updated',
+        ]
+        validators = []

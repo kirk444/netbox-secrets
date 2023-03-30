@@ -12,6 +12,9 @@ router.register('user-keys', views.UserKeyViewSet)
 router.register('secret-roles', views.SecretRoleViewSet)
 router.register('secrets', views.SecretViewSet)
 
+# Certificates
+router.register('certificates', views.CertificateViewSet)
+
 # Miscellaneous
 router.register('get-session-key', views.GetSessionKeyViewSet, basename='get-session-key')
 router.register('generate-rsa-key-pair', views.GenerateRSAKeyPairViewSet, basename='generate-rsa-key-pair')

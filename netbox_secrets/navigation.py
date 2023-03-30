@@ -29,6 +29,11 @@ menu_items = (
         ),
     ),
     PluginMenuItem(
+        link_text="Certificates",
+        link="plugins:netbox_secrets:certificate_list",
+        permissions=["netbox_secrets.view_certificate"],
+    ),
+    PluginMenuItem(
         link_text="Secrets",
         link="plugins:netbox_secrets:secret_list",
         permissions=["netbox_secrets.view_secret"],

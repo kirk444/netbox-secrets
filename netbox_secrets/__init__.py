@@ -43,5 +43,12 @@ class NetBoxSecrets(PluginConfig):
                 related_query_name=model,
             ).contribute_to_class(klass, 'secrets')
 
+            GenericRelation(
+                to='netbox_secrets.Certificate',
+                content_type_field='assigned_object_type',
+                object_id_field='assigned_object_id',
+                related_query_name=model,
+            ).contribute_to_class(klass, 'secrets')
+
 
 config = NetBoxSecrets
